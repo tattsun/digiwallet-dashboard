@@ -1,7 +1,7 @@
 import { Etherscan } from '../lib/etherscan';
 import { isEthereumAddress } from '../lib/customValidators';
 import { Request, Response } from 'express';
-import { ValidationError } from '../lib/errors';
+import { NotFoundError, ValidationError } from '../lib/errors';
 import { ensureString } from '../lib/castutil';
 import { getNow } from '../lib/datatime';
 import Big from 'big.js';
@@ -35,7 +35,7 @@ export class WalletsController {
     const eth = new Big(balance.result).div(1000000000000000000);
 
     // Response
-    res.json({ balance: eth.mul(rate).round(0) });
+    res.json({ balance: eth.mul(rate).round(0).toFixed().toString() });
   }
 
   async getIsOld(req: Request, res: Response) {
@@ -52,9 +52,8 @@ export class WalletsController {
     });
 
     // Calculate duration between a latest transaction and current time
-    if (transactions.result.length === 0) {
-      res.json({ result: true });
-      return;
+    if (transactions == null) {
+      throw new NotFoundError();
     }
     const latestTxTimestamp = new Date(Number.parseInt(transactions.result[0].timeStamp) * 1000);
     const duration = getNow().getTime() - latestTxTimestamp.getTime();

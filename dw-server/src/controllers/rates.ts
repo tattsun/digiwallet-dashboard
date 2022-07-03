@@ -23,7 +23,7 @@ export class RatesController {
     }
 
     // Response
-    res.json({ rate: rate.toString() });
+    res.json({ rate: rate.toFixed().toString() });
   }
 
   async putRate(req: Request, res: Response) {

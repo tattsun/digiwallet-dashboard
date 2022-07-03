@@ -23,3 +23,9 @@ export class NotFoundError extends DwApplicationError {
     super(`not found`, 404);
   }
 }
+
+export class EtherscanError extends DwExceptionError {
+  constructor(message: string, public readonly statusCode: number, public readonly responseBody: any = {}) {
+    super(message);
+  }
+}

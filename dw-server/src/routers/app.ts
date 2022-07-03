@@ -9,8 +9,8 @@ const etherscan = new EtherscanImpl(getEnv(keys.ETHERSCAN_API_KEY));
 const rateRepository = new RateInMemoryRepository();
 
 // initialize repository with sample data
-rateRepository.put('ETH', 'USD', new Big('1.5'));
-rateRepository.put('ETH', 'EUR', new Big('2'));
+rateRepository.put('ETH', 'USD', new Big('1038.63'));
+rateRepository.put('ETH', 'EUR', new Big('995.94'));
 
 export const walletsController = new WalletsController(etherscan, rateRepository);
 export const ratesController = new RatesController(rateRepository);

@@ -1,5 +1,5 @@
 import fetch from 'node-fetch';
-import { DwExceptionError } from './errors';
+import { DwExceptionError, EtherscanError } from './errors';
 
 const baseUrl = 'https://api.etherscan.io/api';
 
@@ -35,7 +35,7 @@ export interface Transaction {
 
 export interface Etherscan {
   getBalance(input: GetBalanceInput): Promise<GetBalanceOutput>;
-  getTransactions(input: GetTransactionsInput): Promise<GetTransactionsOutput>;
+  getTransactions(input: GetTransactionsInput): Promise<GetTransactionsOutput | null>;
 }
 
 export class EtherscanImpl implements Etherscan {
@@ -51,11 +51,11 @@ export class EtherscanImpl implements Etherscan {
     const res = await fetch(url);
 
     if (!res.ok) {
-      throw new DwExceptionError('failed to connect to Etherscan');
+      throw new EtherscanError('failed to connect to Etherscan', res.status);
     }
     const json = (await res.json()) as O;
     if (json.status === '0') {
-      throw new DwExceptionError('Etherscan response error: ' + JSON.stringify(json));
+      throw new EtherscanError('Etherscan response error', res.status, json);
     }
 
     return json;
@@ -70,11 +70,18 @@ export class EtherscanImpl implements Etherscan {
     });
   }
 
-  async getTransactions(input: GetTransactionsInput): Promise<GetTransactionsOutput> {
-    return await this.execGet({
-      module: 'account',
-      action: 'txlist',
-      ...input,
-    });
+  async getTransactions(input: GetTransactionsInput): Promise<GetTransactionsOutput | null> {
+    try {
+      return await this.execGet<any, GetTransactionsOutput>({
+        module: 'account',
+        action: 'txlist',
+        ...input,
+      });
+    } catch (err) {
+      if (err instanceof EtherscanError && err.responseBody.message === 'No transactions found') {
+        return null;
+      }
+      throw err;
+    }
   }
 }
