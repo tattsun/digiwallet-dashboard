@@ -1,6 +1,7 @@
 import {
   Alert,
   Box,
+  Button,
   Card,
   CardContent,
   CircularProgress,
@@ -16,34 +17,35 @@ import CheckIcon from '@mui/icons-material/Check';
 import CloseIcon from '@mui/icons-material/Close';
 import validator from 'validator';
 import { apiClient } from '../../api/ApiClient';
-
-const targetCurrencies = ['EUR', 'USD'];
-const suffix: { [key: string]: string } = {
-  EUR: '€',
-  USD: '＄',
-};
+import BalanceText from '../atoms/BalanceText';
+import { stringToCurrency, TargetCurrencies } from '../../consts/currencies';
 
 export interface DashboardProps {
   address: string;
+  onClickBack: () => unknown;
 }
 
 export function Dashboard(props: DashboardProps) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [walletIsOld, setWalletIsOld] = useState(false);
-  const [targetCurrency, setTargetCurrency] = useState(targetCurrencies[0]);
+  const [targetCurrency, setTargetCurrency] = useState(TargetCurrencies[0]);
   const [rate, setRate] = useState('0');
   const [balance, setBalance] = useState('0');
   const [isEditing, setIsEditing] = useState(false);
   const [editingRate, setEditingRate] = useState('0');
 
   const onChangeCurrency = (e: SelectChangeEvent<string>) => {
-    setTargetCurrency(e.target.value);
+    setTargetCurrency(stringToCurrency(e.target.value));
   };
 
   const refresh = async () => {
     {
       const res = await apiClient.getWalletIsOld(props.address);
+      if (res == null) {
+        setError('No transactions fonud');
+        return;
+      }
       setWalletIsOld(res.result);
     }
     {
@@ -156,7 +158,7 @@ export function Dashboard(props: DashboardProps) {
                       sx={{ width: '100px' }}
                       disabled={isEditing}
                     >
-                      {targetCurrencies.map((currency) => (
+                      {TargetCurrencies.map((currency) => (
                         <MenuItem key={currency} value={currency}>
                           {currency}
                         </MenuItem>
@@ -164,15 +166,17 @@ export function Dashboard(props: DashboardProps) {
                     </Select>
                   </Box>
                   <Box>
-                    <Typography fontWeight="bold">
-                      {balance} {suffix[targetCurrency]}
-                    </Typography>
+                    <BalanceText value={balance} currency={targetCurrency} />
                   </Box>
                 </CardContent>
               </Card>
             </Box>
           </>
         )}
+
+        <Button variant="contained" color="info" onClick={props.onClickBack} sx={{ mt: 2 }}>
+          Back
+        </Button>
       </CardContent>
     </Card>
   );
