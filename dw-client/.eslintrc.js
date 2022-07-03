@@ -50,6 +50,7 @@ module.exports = {
     "react/destructuring-assignment": [0],
     "no-void": [0],
     "no-lone-blocks": [0],
-    "no-unused-vars": [0]
+    "no-unused-vars": [0],
+    'react/jsx-props-no-spreading': [0],
   },
 };

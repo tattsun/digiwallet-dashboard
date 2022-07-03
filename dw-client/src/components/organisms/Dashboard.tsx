@@ -8,17 +8,14 @@ import {
   MenuItem,
   Select,
   SelectChangeEvent,
-  TextField,
   Typography,
 } from '@mui/material';
 import React, { useEffect, useState } from 'react';
 import EditIcon from '@mui/icons-material/Edit';
-import CheckIcon from '@mui/icons-material/Check';
-import CloseIcon from '@mui/icons-material/Close';
-import validator from 'validator';
 import { apiClient } from '../../api/ApiClient';
 import BalanceText from '../atoms/BalanceText';
 import { stringToCurrency, TargetCurrencies } from '../../consts/currencies';
+import RateInput from '../atoms/RateInput';
 
 export interface DashboardProps {
   address: string;
@@ -33,7 +30,6 @@ export function Dashboard(props: DashboardProps) {
   const [rate, setRate] = useState('0');
   const [balance, setBalance] = useState('0');
   const [isEditing, setIsEditing] = useState(false);
-  const [editingRate, setEditingRate] = useState('0');
 
   const onChangeCurrency = (e: SelectChangeEvent<string>) => {
     setTargetCurrency(stringToCurrency(e.target.value));
@@ -72,12 +68,7 @@ export function Dashboard(props: DashboardProps) {
     void f();
   }, [props.address, targetCurrency]);
 
-  const onChangeRate = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    setEditingRate(e.target.value);
-  };
-
   const onClickEdit = () => {
-    setEditingRate(rate);
     setIsEditing(true);
   };
 
@@ -85,15 +76,10 @@ export function Dashboard(props: DashboardProps) {
     setIsEditing(false);
   };
 
-  const onClickSave = async () => {
+  const onClickSave = async (newRate: string) => {
     setLoading(true);
     try {
-      if (!validator.isNumeric(editingRate)) {
-        // eslint-disable-next-line no-alert
-        alert('Please input the rate as number');
-        return;
-      }
-      await apiClient.putRate('ETH', targetCurrency, editingRate);
+      await apiClient.putRate('ETH', targetCurrency, newRate);
       setIsEditing(false);
       await refresh();
     } catch {
@@ -133,18 +119,7 @@ export function Dashboard(props: DashboardProps) {
                     </Box>
                   )}
                   {isEditing && (
-                    <Box>
-                      <Box textAlign="right">
-                        <CloseIcon color="error" onClick={onClickCancel} />
-                        <CheckIcon
-                          color="success"
-                          onClick={() => {
-                            void onClickSave();
-                          }}
-                        />
-                      </Box>
-                      <TextField fullWidth value={editingRate} onChange={onChangeRate} />
-                    </Box>
+                    <RateInput initialValue={rate} onClickCancel={onClickCancel} onClickSave={onClickSave} />
                   )}
                 </CardContent>
               </Card>
